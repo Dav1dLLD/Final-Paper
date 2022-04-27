@@ -20,7 +20,7 @@ library(ggplot2)
 library(mgcv)
 library(lme4)
 library(readr)
-raw_data <- read_csv("C:/R/UK_Smoking/inputs/data/raw_data.csv")
+raw_data <- read_csv("C:/R/UK-Smoking/inputs/data/raw_data.csv")
 ```
 
 
@@ -57,16 +57,19 @@ type| Categorical | The type of cigarette the surveyed people smoke |
 
 ## Data cleaning
 ```{r, include=FALSE}
+#This process is for data cleaning by choosing the respondents who are smokers from the data set and then create a new data set.
 smoker_data <- raw_data%>%
   filter(`smoke` == 'Yes')%>%
   select(gender, age, marital_status, amt_weekdays, amt_weekends, ethnicity, gross_income, region, type)
 ```
 
 ```{r,include=FALSE, echo=FALSE,message=FALSE,warning=FALSE}
+#Then I create a new variable called smoker, which is a factor variable containing of whether 0 or 1.
 raw_data = raw_data %>% mutate(smoker = as.factor(ifelse(smoke %in% c("Yes"),1,0)))
 ```
 
 ```{r,include=FALSE, echo=FALSE,message=FALSE,warning=FALSE}
+#Next, I calculate the number of cigarettes the respondents smoke per day through the calculation of (smoking_per_weekdays + smoking_per_weekends) divided by 2.
 smoker_data = smoker_data %>% mutate(smoking_per_day = (amt_weekdays+amt_weekends)/2)
 ```
 
@@ -87,7 +90,8 @@ region| Categorical | Where are the surveyed people come from in UK |
 
 First of all, some bar plots are created to show an approximate relationship between the respondent and whether they smoke or not based on the variable in the data set.
 
-```{r,fig.height = 3, fig.width = 5,fig.cap="Barplot of whether respodent smokes or not according to gender", include=TRUE, echo=FALSE,message=FALSE,warning=FALSE}
+```{r,fig.height = 3, fig.width = 5,fig.cap="Barplot of whether respondent smokes or not according to gender", include=TRUE, echo=FALSE,message=FALSE,warning=FALSE}
+# I create a Bar plot of whether respondent smokes or not according to gender
 raw_data %>% ggplot(aes(x = gender, fill = smoke)) +
   geom_bar(position = "fill")
 ```
@@ -95,7 +99,8 @@ raw_data %>% ggplot(aes(x = gender, fill = smoke)) +
 From figure 1, the bar plot of whether respondent smokes or not, I can see that approximately 25% of both female and male respondents have the habit of smoking. However, I can not conclude that gender is not a factor to decide whether a person smokes or not, so I need to put the gender factor into my regression model as well, in order to see whether there is a relationship or not.
 
 
-```{r,fig.height = 3, fig.width = 5,fig.cap="Barplot of whether respodent smokes or not according to ethnicity", include=TRUE, echo=FALSE,message=FALSE,warning=FALSE}
+```{r,fig.height = 3, fig.width = 5,fig.cap="Barplot of whether respondent smokes or not according to ethnicity", include=TRUE, echo=FALSE,message=FALSE,warning=FALSE}
+# I create a Bar plot of whether respondent smokes or not according to ethnicity.
 raw_data %>% ggplot(aes(x = ethnicity, fill = smoke)) +
   geom_bar(position = "fill")
 ```
@@ -103,14 +108,16 @@ raw_data %>% ggplot(aes(x = ethnicity, fill = smoke)) +
 Due to the fact that the data collection of ethnicity would be considered racial discrimination issues, I only look for respondent who are willing to provide their ethnicity. According to the figure 2, respondents who are mixed have a more percentage of smoking than other ethnicity, while Chinese are seems to be the less ethnicity who are smoking. However, our sample size is not large enough, so that I will put ethnicity in my regression model to test if it is truly an influential variable.
 
 
-```{r,fig.height = 3, fig.width = 5,fig.cap="Barplot of whether respodent smokes or not according to marital status", include=TRUE, echo=FALSE,message=FALSE,warning=FALSE}
+```{r,fig.height = 3, fig.width = 5,fig.cap="Barplot of whether respondent smokes or not according to marital status", include=TRUE, echo=FALSE,message=FALSE,warning=FALSE}
+# I create a Bar plot of whether respondent smokes or not according to marital status.
 raw_data %>% ggplot(aes(x = marital_status, fill = smoke)) +
   geom_bar(position = "fill")
 ```
 
 From figure 3, I can see that approximately 36% of the respondents who are single and divorced have the habit of smoking, while approximately 20% of the married and widowed respondents have the habit of smoking. As I mentioned before, due to the small scale of sample size, the visualization may not be accurate, so that I will put marital status into my regression model as well.
 
-```{r,fig.height = 3, fig.width = 8,fig.cap="Barplot of whether respodent smokes or not according to region", include=TRUE, echo=FALSE,message=FALSE,warning=FALSE}
+```{r,fig.height = 3, fig.width = 8,fig.cap="Barplot of whether respondent smokes or not according to region", include=TRUE, echo=FALSE,message=FALSE,warning=FALSE}
+# I create a Bar plot of whether respondent smokes or not according to region.
 raw_data %>% ggplot(aes(x = region, fill = smoke)) +
   geom_bar(position = "fill")
 ```
@@ -123,21 +130,25 @@ From figure 4, I can see that approximately 35% of the respondents who are from 
 ## Logistic Regression Models
 
 ```{r,include=FALSE, echo=FALSE,message=FALSE,warning=FALSE}
+# This is the mod 1 that I created to test the relationship between income range and whether respondents are smokers or not.
 mod1 = glmer(smoker ~ gender+gross_income+(1|age), family = binomial, data = raw_data)
 summary(mod1)
 ```
 
 ```{r,include=FALSE, echo=FALSE,message=FALSE,warning=FALSE}
+# This is the mod 2 that I created to test the relationship between range and whether respondents are smokers or not.
 mod2 = glmer(smoker ~ gender+region+(1|age), family = binomial, data = raw_data)
 summary(mod2)
 ```
 
 ```{r,include=FALSE, echo=FALSE,message=FALSE,warning=FALSE}
+# This is the mod 3 that I created to test the relationship between marital status and whether respondents are smokers or not.
 mod3 = glmer(smoker ~ gender+marital_status+(1|age), family = binomial, data = raw_data)
 summary(mod3)
 ```
 
 ```{r,include=FALSE, echo=FALSE,message=FALSE,warning=FALSE}
+# This is the mod 4 that I created to test the relationship between ethnicity and whether respondents are smokers or not.
 mod4 = glmer(smoker ~ gender+ethnicity+(1|age), family = binomial, data = raw_data)
 summary(mod4)
 ```
@@ -159,11 +170,13 @@ Moreover,for all the models, I can see that all the p-values of gender are great
 ## Linear Regression Models
 
 ```{r,include=FALSE, echo=FALSE,message=FALSE,warning=FALSE}
+# This is the mod5 that I created to show whether there is a relationship between age and smoker or not.
 mod5 = lm(age~smoker, data = raw_data)
 summary(mod5)
 ```
 
 ```{r,include=FALSE, echo=FALSE,message=FALSE,warning=FALSE}
+# This is the mod6 that I created to show whether there is a relationship between age and smoking per day or not.
 mod6 = lm(age~smoking_per_day, data= smoker_data)
 summary(mod6)
 ```
